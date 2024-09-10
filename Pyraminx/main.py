@@ -84,6 +84,40 @@ class PyraminxGui:
         self.buttons.append(self.rotate_button4)
         yval += 30
 
+        #Button 5 - Last Row Clockwise
+        self.rotate_button5 = Button(self.root, text="Red Last Row Clockwise", command=self.rotate5)
+        self.rotate_button5.place(x=700, y=yval)
+        self.buttons.append(self.rotate_button5)
+        yval += 30
+
+        #Button 6 - Last Row Counterclockwise
+        self.rotate_button6 = Button(self.root, text="Red Last Row Counterclockwise", command=self.rotate6)
+        self.rotate_button6.place(x=700, y=yval)
+        self.buttons.append(self.rotate_button6)
+        yval += 50
+
+         #----------------------- GREEN FACE -------------------------------------#
+
+        #Button 7 - Top Row Clockwise
+        self.rotate_button7 = Button(self.root, text="Green Top Clockwise", command=self.rotate7)
+        self.rotate_button7.place(x=700, y=yval)
+        self.buttons.append(self.rotate_button7)
+        yval += 30
+
+        #Button 8 - Top Row Counterclockwise
+        self.rotate_button8 = Button(self.root, text="Green Top Counterclockwise", command=self.rotate8)
+        self.rotate_button8.place(x=700, y=yval)
+        self.buttons.append(self.rotate_button8)
+        yval += 30
+
+        #Button 9 - Second Row Clockwise
+        self.rotate_button9 = Button(self.root, text="Green Top Counterclockwise", command=self.rotate9)
+        self.rotate_button9.place(x=700, y=yval)
+        self.buttons.append(self.rotate_button9)
+        yval += 30
+
+        #Button 10 - Second Row Counterclockwise
+
     
 
     def updateGui(self):
@@ -121,7 +155,7 @@ class PyraminxGui:
                 self.draw_triangle(x_pos, y_pos, color, PyraminxGui.triangle_id)
                 
                 # Label for the right-side-up triangle
-                self.canvas.create_text(x_pos, y_pos + 10, text=f"ID: {PyraminxGui.triangle_id}", fill="black", font=('Arial', 8))
+                self.canvas.create_text(x_pos, y_pos + 10, text=f"{PyraminxGui.triangle_id}", fill="black", font=('Arial', 8))
                 
                 # Save information about the triangle
                 self.triangles.append({
@@ -141,7 +175,7 @@ class PyraminxGui:
                     self.draw_upsidedown_triangle(x_pos_ud, y_pos, color, PyraminxGui.triangle_id)
 
                     # Label for the upside-down triangle
-                    self.canvas.create_text(x_pos_ud, y_pos, text=f"ID: {PyraminxGui.triangle_id}", fill="black", font=('Arial', 8), anchor='center')
+                    self.canvas.create_text(x_pos_ud, y_pos, text=f"{PyraminxGui.triangle_id}", fill="black", font=('Arial', 8), anchor='center')
 
                     
                     # Save information about the upside-down triangle
@@ -278,6 +312,184 @@ class PyraminxGui:
         # Update the canvas to reflect the new colors
         for triangle in [49, 50, 51, 17, 18, 19, 33, 34, 35]:
             self.update_triangle_color(triangle)
+
+    def rotate5(self):
+        # Red second row clockwise rotation
+
+        color1 = self.triangles[25]['color']
+        color2 = self.triangles[26]['color']
+        color3 = self.triangles[27]['color']
+        color4 = self.triangles[28]['color']
+        color5 = self.triangles[29]['color']
+        color6 = self.triangles[30]['color']
+        color7 = self.triangles[31]['color']
+
+        color8 = self.triangles[41]['color']
+        color9 = self.triangles[42]['color']
+        color10 = self.triangles[43]['color']
+        color11 = self.triangles[44]['color']
+        color12 = self.triangles[45]['color']
+        color13 = self.triangles[46]['color']
+        color14 = self.triangles[47]['color']
+
+        color15 = self.triangles[57]['color']
+        color16 = self.triangles[58]['color']
+        color17= self.triangles[59]['color']
+        color18 = self.triangles[60]['color']
+        color19 = self.triangles[61]['color']
+        color20 = self.triangles[62]['color']
+        color21 = self.triangles[63]['color']
+
+        # Swap
+        self.triangles[25]['color'] = color8
+        self.triangles[26]['color'] = color9
+        self.triangles[27]['color'] = color10
+        self.triangles[28]['color'] = color11
+        self.triangles[29]['color'] = color12
+        self.triangles[30]['color'] = color13
+        self.triangles[31]['color'] = color14
+
+        self.triangles[41]['color'] = color15
+        self.triangles[42]['color'] = color16
+        self.triangles[43]['color'] = color17
+        self.triangles[44]['color'] = color18
+        self.triangles[45]['color'] = color19
+        self.triangles[46]['color'] = color20
+        self.triangles[47]['color'] = color21
+
+        self.triangles[57]['color'] = color1
+        self.triangles[58]['color'] = color2
+        self.triangles[59]['color'] = color3
+        self.triangles[60]['color'] = color4
+        self.triangles[61]['color'] = color5
+        self.triangles[62]['color'] = color6
+        self.triangles[63]['color'] = color7
+
+
+        # Update the canvas to reflect the new colors
+        for triangle in [25, 26, 27, 28, 29, 30, 31, 41, 42, 43, 44, 45, 46, 47, 57, 58, 59, 60, 61, 62, 63]:
+            self.update_triangle_color(triangle)
+    def rotate6(self):
+        # Red second row counterclockwise rotation
+
+        color1 = self.triangles[25]['color']
+        color2 = self.triangles[26]['color']
+        color3 = self.triangles[27]['color']
+        color4 = self.triangles[28]['color']
+        color5 = self.triangles[29]['color']
+        color6 = self.triangles[30]['color']
+        color7 = self.triangles[31]['color']
+
+        color8 = self.triangles[41]['color']
+        color9 = self.triangles[42]['color']
+        color10 = self.triangles[43]['color']
+        color11 = self.triangles[44]['color']
+        color12 = self.triangles[45]['color']
+        color13 = self.triangles[46]['color']
+        color14 = self.triangles[47]['color']
+
+        color15 = self.triangles[57]['color']
+        color16 = self.triangles[58]['color']
+        color17 = self.triangles[59]['color']
+        color18 = self.triangles[60]['color']
+        color19 = self.triangles[61]['color']
+        color20 = self.triangles[62]['color']
+        color21 = self.triangles[63]['color']
+
+        # Swap in reverse (clockwise)
+        self.triangles[25]['color'] = color15
+        self.triangles[26]['color'] = color16
+        self.triangles[27]['color'] = color17
+        self.triangles[28]['color'] = color18
+        self.triangles[29]['color'] = color19
+        self.triangles[30]['color'] = color20
+        self.triangles[31]['color'] = color21
+
+        self.triangles[41]['color'] = color1
+        self.triangles[42]['color'] = color2
+        self.triangles[43]['color'] = color3
+        self.triangles[44]['color'] = color4
+        self.triangles[45]['color'] = color5
+        self.triangles[46]['color'] = color6
+        self.triangles[47]['color'] = color7
+
+        self.triangles[57]['color'] = color8
+        self.triangles[58]['color'] = color9
+        self.triangles[59]['color'] = color10
+        self.triangles[60]['color'] = color11
+        self.triangles[61]['color'] = color12
+        self.triangles[62]['color'] = color13
+        self.triangles[63]['color'] = color14
+
+        # Update the canvas to reflect the new colors
+        for triangle in [25, 26, 27, 28, 29, 30, 31, 41, 42, 43, 44, 45, 46, 47, 57, 58, 59, 60, 61, 62, 63]:
+            self.update_triangle_color(triangle)
+        
+
+    ##---------------- BLUE -----------------------##
+    def rotate7(self):
+        # Top clockwise
+        
+        color2 = self.triangles[0]['color']
+        color3 = self.triangles[32]['color']
+        color4 = self.triangles[48]['color']
+
+        # Perform a color swap in a circular manner 
+        self.triangles[0]['color'] = color3
+        self.triangles[32]['color'] = color4
+        self.triangles[48]['color'] = color2
+
+         # Update the canvas to reflect the new colors
+        for triangle in [0, 32, 48]:
+            self.update_triangle_color(triangle)
+    
+    def rotate8(self):
+        # Top counterclockwise
+        color2 = self.triangles[0]['color']
+        color3 = self.triangles[32]['color']
+        color4 = self.triangles[48]['color']
+
+        # Perform a color swap in the opposite (counterclockwise) direction
+        self.triangles[0]['color'] = color4
+        self.triangles[32]['color'] = color2
+        self.triangles[48]['color'] = color3
+
+        # Update the canvas to reflect the new colors
+        for triangle in [0, 32, 48]:
+            self.update_triangle_color(triangle)
+
+
+    def rotate9(self):
+        # Access the colors of the triangles with the specified IDs
+        color1 = self.triangles[1]['color']
+        color2 = self.triangles[2]['color']
+        color3 = self.triangles[3]['color']
+
+        color4 = self.triangles[33]['color']
+        color5 = self.triangles[34]['color']
+        color6 = self.triangles[35]['color']
+
+        color7 = self.triangles[49]['color']
+        color8 = self.triangles[50]['color']
+        color9 = self.triangles[51]['color']
+
+        # Perform the clockwise rotation of the colors
+        self.triangles[49]['color'] = color1
+        self.triangles[50]['color'] = color2
+        self.triangles[51]['color'] = color3
+
+        self.triangles[1]['color'] = color4
+        self.triangles[2]['color'] = color5
+        self.triangles[3]['color'] = color6
+
+        self.triangles[33]['color'] = color7
+        self.triangles[34]['color'] = color8
+        self.triangles[35]['color'] = color9
+
+        # Update the canvas to reflect the new colors
+        for triangle in [1, 2, 3, 33, 34, 35, 49, 50, 51]:
+            self.update_triangle_color(triangle)
+
 
 
 
