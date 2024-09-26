@@ -1,8 +1,11 @@
 from tkinter import *
 from tkinter import ttk
+from collections import namedtuple
 import random
+import copy
+import heapq
 
-global triangle_id
+num_moves = 0
 
 class Pyraminx:
     def __init__(self):
@@ -13,6 +16,8 @@ class Pyraminx:
             'C': [["blue"] * 4 for _ in range(4)],
             'D': [["yellow"] * 4 for _ in range(4)],
         }
+
+        self.original_state = self.faces.copy()
 
     def get_colors(self):
         # Get a flat list of colors from all faces
@@ -35,8 +40,10 @@ class PyraminxGui:
         self.pyraminx = Pyraminx()
         self.triangles = []  # Store triangle information
         root.title("Pyraminx Puzzle")
+        self.State = namedtuple('State', ['colors', 'moves', 'cost', 'heuristic'])
 
         self.canvas = Canvas(root, width=1000, height=1000, bg='white')
+
         self.canvas.pack()
 
         self.buttons = []
@@ -51,9 +58,18 @@ class PyraminxGui:
         self.input_moves = Entry(self.root)
         self.input_moves.place(x=650, y=yval)
 
+        # Reset Button
+        self.reset_button = Button(self.root, text="Reset", command=self.reset_puzzle)
+        self.reset_button.place(x=800, y=yval)  # Place the reset button at (x=800, y=yval)
+        self.buttons.append(self.reset_button)  # Add to the list
+
         self.button = Button(self.root, text="Randomize", command=self.randomize_puzzle)
         self.button.place(x=700, y=yval)  # Place the button at (x=820, y=yval)
         self.buttons.append(self.button)  # Add to the list
+
+        self.solve_button = Button(self.root, text="Solve", command=self.solve)
+        self.solve_button.place(x=900, y=yval)
+        self.buttons.append(self.solve_button)
 
         # Increment yval to place the buttons close together
         yval += 30
@@ -302,33 +318,230 @@ class PyraminxGui:
 
         
     def randomize_puzzle(self):
+        self.button.config(state=DISABLED)
+        global num_moves
+
         # Randomize the puzzle 
         try:
             num_moves = int(self.input_moves.get())
 
             self.randomize(num_moves)
+            self.calc_heuristic()
+
         except ValueError:
             print("Please enter a valid number")
     
+    # K random moves (num_moves)
     def randomize(self, num_moves):
 
-        # List of all possible rotations
+        # List of all the clockwise functions
         rotations = [
-            self.rotate1, self.rotate2, self.rotate3, self.rotate4,
-            self.rotate5, self.rotate6, self.rotate7, self.rotate8,
-            self.rotate9, self.rotate10, self.rotate11, self.rotate12,
-            self.rotate13, self.rotate14, self.rotate15, self.rotate16,
-            self.rotate17, self.rotate18, self.rotate19, self.rotate20,
-            self.rotate21, self.rotate22, self.rotate23, self.rotate24
+            self.rotate1, self.rotate3, self.rotate5, self.rotate7,
+            self.rotate9, self.rotate11, self.rotate13, self.rotate15,
+            self.rotate17, self.rotate19, self.rotate21, self.rotate23
         ]
 
         for _ in range(num_moves):
             random.choice(rotations)()
 
+    def reset_puzzle(self):
+        self.button.config(state=NORMAL)
+        # Manually set colors for each triangle ID
+        for triangle in self.triangles:
+            triangle_id = triangle['id']
+            if 0 <= triangle_id <= 15:
+                triangle['color'] = 'red'     # IDs 0-15 are red
+            elif 16 <= triangle_id <= 31:
+                triangle['color'] = 'green'   # IDs 16-31 are green
+            elif 32 <= triangle_id <= 47:
+                triangle['color'] = 'yellow'   # IDs 32-47 are yellow
+            elif 48 <= triangle_id <= 63:
+                triangle['color'] = 'blue'     # IDs 48-63 are blue
+
+        # Update the canvas to reflect the new colors for all triangles
+        for triangle in range(len(self.triangles)):  # Update for all triangles
+            self.update_triangle_color(triangle)
+
+
+
     def update_triangle_color(self, triangle_id):
         # Update the color of the triangle with the specified ID on the canvas
         triangle = self.triangles[triangle_id]
         self.canvas.itemconfig(f"triangle_{triangle_id}", fill=triangle['color'])
+    
+
+#--------------------- SOLVING ----------------------------------#
+    
+    # Admissible Heuristic is the max number of colors on any face minus 1, range is 0-3
+    def calc_heuristic(self):
+        # Define the triangle IDs for each face of the Pyraminx
+        faces = [
+            [0, 1, 2, 3, 4, 5, 6, 7],  # Example IDs for one face
+            [8, 9, 10, 11, 12, 13, 14, 15],  # Another face
+            [16, 17, 18, 19, 20, 21, 22, 23],  # And so on
+            [24, 25, 26, 27, 28, 29, 30, 31],
+            [32, 33, 34, 35, 36, 37, 38, 39],
+            [40, 41, 42, 43, 44, 45, 46, 47],
+            [48, 49, 50, 51, 52, 53, 54, 55],
+            [56, 57, 58, 59, 60, 61, 62, 63]
+        ]
+        
+        max_colors_on_face = 0
+        
+        # Loop through each face and count the number of unique colors
+        for face in faces:
+            colors_on_face = set(self.triangles[triangle_id]['color'] for triangle_id in face)
+            max_colors_on_face = max(max_colors_on_face, len(colors_on_face))
+        
+        # The heuristic is max number of unique colors on any face - 1
+        heuristic = max_colors_on_face - 1
+        print(f"Heuristic:", (heuristic))
+        return heuristic
+
+
+    def solve(self):
+        open_list = []      # List for the open states (priority queue)
+        closed_list = set() # Set for visited states
+        parent_map = {}
+        history = []
+
+        initial_cost = 0
+        initial_state = self.get_current_state()
+        initial_heuristic = self.calc_heuristic()
+
+        # Mapping each rotation function to a move name
+        counter_rotations = [
+            (self.rotate2, 'rotate2'), (self.rotate4, 'rotate4'), 
+            (self.rotate6, 'rotate6'), (self.rotate8, 'rotate8'), 
+            (self.rotate10, 'rotate10'), (self.rotate12, 'rotate12'),
+            (self.rotate14, 'rotate14'), (self.rotate16, 'rotate16'),
+            (self.rotate18, 'rotate18'), (self.rotate20, 'rotate20'),
+            (self.rotate22, 'rotate22'), (self.rotate24, 'rotate24')
+    ]
+
+        # Push the initial state onto the open list with its cost
+        # f(n) = g(n) + h(n), intial cost is the cost to reach the current state from initial state
+        # This is the first step, meaning initial cost is 0 + heuristic value: (0 + x, 0, initial_state)
+        heapq.heappush(open_list, (initial_cost + initial_heuristic, initial_cost, initial_state))
+        parent_map[tuple(map(tuple, initial_state))] = None
+
+        while open_list:
+            current_cost, g_n, current_state = heapq.heappop(open_list)
+            history.append(current_state)
+
+            # Check if the current state is the goal state
+            if self.is_goal_state(current_state):
+                print("Solved!!")
+                return self.reconstruct_path(history, current_state)
+            
+            # Add the current state to the closed list
+            closed_list.add(tuple(map(tuple, current_state)))
+
+            # Expand the current state to get neighbors
+            for move, move_name in counter_rotations:
+                next_state = self.copy_state(current_state)
+
+                move()
+                print(f"Applying move: {move_name}")
+                    # Check if apply_move returned None
+                if next_state is None:
+                    print(f"Move {move} did not produce a valid state.")
+                    continue  # Skip this move if it didn't produce a valid state
+                # Check if the new state has already been visited
+                if tuple(map(tuple, next_state)) in closed_list:
+                    continue
+
+                nextg_n = g_n + 1
+                next_heuristic = self.calc_heuristic(next_state)
+                heapq.heappush(open_list, (nextg_n + next_heuristic, nextg_n, next_state))
+                parent_map[tuple(map(tuple, next_state))] = current_state
+
+        print("No solution found.")
+        return None
+
+
+    
+    def is_goal_state(self, state):
+        solved_state = {
+            'A': [['red'] * 4 for _ in range(4)],  # Red face
+            'B': [['green'] * 4 for _ in range(4)],  # Green face
+            'C': [['yellow'] * 4 for _ in range(4)],  # Blue face
+            'D': [['blue'] * 4 for _ in range(4)]  # Yellow face
+        }
+
+        # Check if the current state matches the solved state
+        return state == solved_state
+
+    def copy_state(self, state):
+        # Return a deep copy of the state
+        return [list(row) for row in state]  # Adjust this based on your state structure
+
+    def reconstruct_path(self, history, goal_state):
+        # Find the index of the goal state in the history
+        for state in history:
+            # Check if current state is the goal state
+            if self.is_goal_state(state):
+                # Return path from start to goal
+                return history[:history.index(state) + 1]
+                
+        return [] # Return empty is no path found
+
+    def get_current_state(self):
+        # Initialize the dictionary for faces
+        color_dict = {
+            'A': [[None] * 4 for _ in range(4)],
+            'B': [[None] * 4 for _ in range(4)],
+            'C': [[None] * 4 for _ in range(4)],
+            'D': [[None] * 4 for _ in range(4)],
+        }
+
+        # Triangle face mapping
+        triangle_face_mapping = {
+        # Face A (red)
+        0: ('A', 0, 0), 1: ('A', 0, 1), 2: ('A', 0, 2), 3: ('A', 0, 3),
+        4: ('A', 1, 0), 5: ('A', 1, 1), 6: ('A', 1, 2), 7: ('A', 1, 3),
+        8: ('A', 2, 0), 9: ('A', 2, 1), 10: ('A', 2, 2), 11: ('A', 2, 3),
+        12: ('A', 3, 0), 13: ('A', 3, 1), 14: ('A', 3, 2), 15: ('A', 3, 3),
+
+        # Face B (green)
+        16: ('B', 0, 0), 17: ('B', 0, 1), 18: ('B', 0, 2), 19: ('B', 0, 3),
+        20: ('B', 1, 0), 21: ('B', 1, 1), 22: ('B', 1, 2), 23: ('B', 1, 3),
+        24: ('B', 2, 0), 25: ('B', 2, 1), 26: ('B', 2, 2), 27: ('B', 2, 3),
+        28: ('B', 3, 0), 29: ('B', 3, 1), 30: ('B', 3, 2), 31: ('B', 3, 3),
+
+        # Face C (yellow)
+        32: ('C', 0, 0), 33: ('C', 0, 1), 34: ('C', 0, 2), 35: ('C', 0, 3),
+        36: ('C', 1, 0), 37: ('C', 1, 1), 38: ('C', 1, 2), 39: ('C', 1, 3),
+        40: ('C', 2, 0), 41: ('C', 2, 1), 42: ('C', 2, 2), 43: ('C', 2, 3),
+        44: ('C', 3, 0), 45: ('C', 3, 1), 46: ('C', 3, 2), 47: ('C', 3, 3),
+
+        # Face D (blue)
+        48: ('D', 0, 0), 49: ('D', 0, 1), 50: ('D', 0, 2), 51: ('D', 0, 3),
+        52: ('D', 1, 0), 53: ('D', 1, 1), 54: ('D', 1, 2), 55: ('D', 1, 3),
+        56: ('D', 2, 0), 57: ('D', 2, 1), 58: ('D', 2, 2), 59: ('D', 2, 3),
+        60: ('D', 3, 0), 61: ('D', 3, 1), 62: ('D', 3, 2), 63: ('D', 3, 3),
+
+        }
+        # Populate the dictionary with colors based on triangle IDs
+        for triangle in self.triangles:
+            triangle_id = triangle['id']
+            color = triangle['color']
+            
+            # Check if the triangle ID is in the mapping
+            if triangle_id in triangle_face_mapping:
+                face, row, col = triangle_face_mapping[triangle_id]
+                color_dict[face][row][col] = color
+        return color_dict
+
+
+    
+
+
+
+
+
+
+
 
 #--------------------- ROTATIONS --------------------------------#
     ##---------------- RED on bottom -----------------------##
@@ -349,7 +562,7 @@ class PyraminxGui:
         # Update the canvas to reflect the new colors
         for triangle in [16, 47, 57]:
             self.update_triangle_color(triangle)
-    
+         
     def rotate2(self):
         # Access the colors of the triangles with the specified IDs
         color2 = self.triangles[16]['color']
