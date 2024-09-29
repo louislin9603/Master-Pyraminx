@@ -9,3 +9,9 @@ The first part of the program consists of:
 - User Interactive Buttons
 - Rotation functions that swap colors based on direction and color
 - Randomizer
+
+[Part2. Solving the Pyraminx Writeup](Solving.pdf) </br/> <br/>
+The second part of the program consists of:
+- Implementation of Admissible Heuristic
+- Solving the Pyraminx using A* Search Algorithm
+- Tracking Node searching and Time elapsed
