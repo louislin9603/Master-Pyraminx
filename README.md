@@ -10,6 +10,8 @@ The first part of the program consists of:
 - Rotation functions that swap colors based on direction and color
 - Randomizer
 
+<br/> <br/>
+
 [Part2. Solving the Pyraminx Writeup](Solving.pdf) <br/> <br/>
 The second part of the program consists of:
 - Implementation of Admissible Heuristic
